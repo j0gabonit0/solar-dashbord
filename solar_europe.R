@@ -1,32 +1,28 @@
 # install package tidyverse
 library(tidyverse)
 library(ggplot2)
+library(shiny)
+library(shinydashboard)
+library(tidyverse)
+library(ggplot2)
+library(scales)
+library(dplr)
 
 
-path <- "/Users/sascha/hackyhack/solar/data/opsd-weather_data-2019-04-09_WerteTemperatur-Einstrahlung/weather_data.csv"
+#############
+#Shinydashbord neu installieren
+install.packages("devtools")
+library("devtools")
+install_github("rstudio/shinydashboard")
 
-# Fehler in der Ursprungsdatei
-
-
+##############
+#Error
 #2 Filtering hart nicht richtig funktioniert, ich habe es überall manuell eingefügt
-
-raw_opsd <- read_delim(file = path,delim = ",") # Rohdaten eingelesen
-solar_europe <-raw_opsd # Rohdaten in neue Tabelle geschrieben
-solar_europe_de <- select(solar_europe,utc_timestamp, starts_with("DE")) %>%
-  filter(utc_timestamp >= "2005-12-31 24:00:00") %>%
-  distinct(utc_timestamp, .keep_all = TRUE)
-
-solar_europe_tidy <- solar_europe_de %>% 
-  pivot_longer(-utc_timestamp, names_to = "country", values_to = "wm2") # Rohdaten umgeändert in drei Spalten
-solar_europe_tidy2 <- solar_europe_tidy %>% 
-  separate(country, into = c("country","metric"),
-           sep = "_", extra = "merge")
-  
-  solar_europe_tidy3 <- pivot_wider(solar_europe_tidy2, names_from = metric, values_from = wm2)
 
 ############
 #1.Schritt - Rohdaten in eine neue Tabelle schreiben
 
+path <- "/Users/sascha/Nextcloud/17_solar_dashbord/opsd-weather_data-2019-04-09_WerteTemperatur-Einstrahlung/weather_data.csv"
 
 raw_opsd <- read_delim(file = path,delim = ",") # Rohdaten 
 solar_europe <-raw_opsd # Ursprungstabelle
@@ -42,13 +38,10 @@ solar_europe_de <- solar_europe %>%
   separate(country, into = c("country","metric"), sep = "_", extra = "merge") %>%
   pivot_wider(names_from = metric, values_from = wm2)
 
-write_csv(solar_europe_de,"/Users/sascha/hackyhack/solar/solar_europe_de.csv")  
-
 ####################################
 #3.Schritt - Überflüssige Daten entfernen Windspeed/
 
-path2 <- "/Users/sascha/hackyhack/solar/solar_europe_de.csv"
-solar_europe_de <- read_delim(file = path2,delim = ",") %>% # Rohdaten eingelesen
+solar_europe_de_w <- solar_europe_de
   select(-windspeed_10m) %>% # Windspeed entfernen
   mutate(global_radiation = radiation_direct_horizontal + radiation_diffuse_horizontal,
          solar_watt  = global_radiation * (0.68 * ((-0.583 * temperature + 115)/100))) %>%
@@ -56,10 +49,30 @@ solar_europe_de <- read_delim(file = path2,delim = ",") %>% # Rohdaten eingelese
 ####################################
 #3.1 Wikipedia NUTS Daten hinzufügen
 
-path_wiki <- "/Users/sascha/hackyhack/solar/wiki_nuts_tidy.csv"
+path_wiki <- "/Users/sascha/Nextcloud/17_solar_dashbord/wiki_nuts_tidy.csv"
 wiki_nuts <- read_delim(file = path_wiki,delim = ",")
-solar_europe_de_nuts <- inner_join(solar_europe_de, wiki_nuts, by = c("country" = "NUTS2"))
+solar_europe_de_nuts <- inner_join(solar_europe_de_w, wiki_nuts, by = c("country" = "NUTS2"))
 
+####################################
+#3.2 .Schritt - Überflüssige Daten entfernen Windspeed/
+
+solar_europe_de <- read_delim(file = path, delim = ",") %>% # Rohdaten eingelesen
+  select(-windspeed_10m) %>% # Windspeed entfernen
+  mutate(global_radiation = radiation_direct_horizontal + radiation_diffuse_horizontal,
+         solar_watt=global_radiation * ( 0.68 * ((-0.583 * temperature + 115)/100))) %>%
+  select(-radiation_direct_horizontal,-radiation_diffuse_horizontal)
+
+#slpc aus https://swbt-netz.de/
+slpc <- read_delim(file = path_slpc, delim = ";", skip = 1) %>%
+  mutate(date = Datum %>% as.Date("%d.%m.%Y") %>% as.character() %>% substr(6,10) %>% paste0("2019-", .) %>% as.Date()) %>%
+  group_by(date) %>%
+  mutate(watt = gsub(",", ".", `Wirkleistung [kW]`) %>% as.numeric()) %>%
+  summarize(standardlast = sum(watt) * 1000)
+
+#####################################
+#3.3 Datei abspeichern für Shiny
+
+write_csv(solar_europe_de,"/Users/sascha/Nextcloud/17_solar_dashbord/solar_europe_de.csv")
 ################################################
 #4.Schritt - Durchschnittliche Sonneneinstrahlung vor Ort m2
 

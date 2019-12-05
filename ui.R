@@ -1,3 +1,4 @@
+library(shinydashboard)
 titlePanel("Solar Deutschland")
 
 sidebar <- dashboardSidebar(

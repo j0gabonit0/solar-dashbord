@@ -6,7 +6,7 @@ library(shinydashboard)
 library(tidyverse)
 library(ggplot2)
 library(scales)
-library(dplr)
+library(dplR)
 
 
 #############
@@ -38,12 +38,13 @@ solar_europe_de <- solar_europe %>%
   separate(country, into = c("country","metric"), sep = "_", extra = "merge") %>%
   pivot_wider(names_from = metric, values_from = wm2)
 
+rlang::last_error
 ####################################
 #3.Schritt - Überflüssige Daten entfernen Windspeed/
 
-solar_europe_de_w <- solar_europe_de
+solar_europe_de_w <- solar_europe_de %>%
   select(-windspeed_10m) %>% # Windspeed entfernen
-  mutate(global_radiation = radiation_direct_horizontal + radiation_diffuse_horizontal,
+  mutate(global_radiation = (radiation_direct_horizontal + radiation_diffuse_horizontal) / 1000 ,
          solar_watt  = global_radiation * (0.68 * ((-0.583 * temperature + 115)/100))) %>%
   select(-radiation_direct_horizontal,-radiation_diffuse_horizontal)
 ####################################
@@ -54,25 +55,25 @@ wiki_nuts <- read_delim(file = path_wiki,delim = ",")
 solar_europe_de_nuts <- inner_join(solar_europe_de_w, wiki_nuts, by = c("country" = "NUTS2"))
 
 ####################################
-#3.2 .Schritt - Überflüssige Daten entfernen Windspeed/
-
-solar_europe_de <- read_delim(file = path, delim = ",") %>% # Rohdaten eingelesen
-  select(-windspeed_10m) %>% # Windspeed entfernen
-  mutate(global_radiation = radiation_direct_horizontal + radiation_diffuse_horizontal,
-         solar_watt=global_radiation * ( 0.68 * ((-0.583 * temperature + 115)/100))) %>%
-  select(-radiation_direct_horizontal,-radiation_diffuse_horizontal)
+#Standardlastprofil
 
 #slpc aus https://swbt-netz.de/
+# Addieren Sie die 4 Werte einer Stunde, und teilen Sie das Ergebnis durch 4. Damit erhalten Sie den Wert eines Kilowatt pro Stunde = kWh. 
+
+
+path_slpc <- "/Users/sascha/Nextcloud/17_solar_dashbord/slpc.csv"
 slpc <- read_delim(file = path_slpc, delim = ";", skip = 1) %>%
   mutate(date = Datum %>% as.Date("%d.%m.%Y") %>% as.character() %>% substr(6,10) %>% paste0("2019-", .) %>% as.Date()) %>%
   group_by(date) %>%
   mutate(watt = gsub(",", ".", `Wirkleistung [kW]`) %>% as.numeric()) %>%
-  summarize(standardlast = sum(watt) * 1000)
+  summarize(standardlast = sum(watt) / 4 )
+
+
 
 #####################################
 #3.3 Datei abspeichern für Shiny
-
-write_csv(solar_europe_de,"/Users/sascha/Nextcloud/17_solar_dashbord/solar_europe_de.csv")
+write_csv(slpc,"/Users/sascha/Nextcloud/17_solar_dashbord/slpc_c.csv")
+write_csv(solar_europe_de_nuts,"/Users/sascha/Nextcloud/17_solar_dashbord/solar_europe_de_nuts.csv")
 ################################################
 #4.Schritt - Durchschnittliche Sonneneinstrahlung vor Ort m2
 

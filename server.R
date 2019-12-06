@@ -17,7 +17,7 @@ function(input, output) {
        filter(Stadt == input$selected_country) %>%
        filter(utc_timestamp >= paste0(startyear, "-01-01 00:00:00"), utc_timestamp <= paste0(endyear, "-12-31 24:00:00")) %>% 
        summarise(
-       yieldm2 = sum(solar_watt) / years * input$efficency /1000,
+       yieldm2 = sum(solar_watt) / years * input$efficency,
        m = input$kwhy/yieldm2
        #c = "50"
        )
@@ -67,14 +67,14 @@ function(input, output) {
     data %>%
       mutate(day = utc_timestamp %>% as.character() %>% substr(6,10)) %>%
       group_by(day) %>%
-      summarize(avg = mean(solar_watt, na.rm = TRUE), std = sd(solar_watt, na.rm = TRUE) / sqrt(n())) %>%
+      summarize(avg = mean(solar_watt, na.rm = TRUE) * input$m2, std = sd(solar_watt, na.rm = TRUE) / sqrt(n())) %>%
       mutate(date = as.Date(paste0("2019-", day))) %>% 
       inner_join(slpc) %>%
-      mutate(standardlast = standardlast / m2() %>% pull(m)) %>%
+      #mutate(solar_watt = solar_watt * input$m2) %>%              #         standardlast = standardlast / m2() %>% pull(m)) %>%
       ggplot() + 
       aes(x = date) +
-      geom_ribbon(aes(ymin = avg - 1.96 * std, ymax = avg + 1.96 * std), fill = "green") +
-      geom_line(aes(y = avg)) +
+      geom_ribbon(aes(ymin = avg - 1.96 * std * input$m2, ymax = avg + 1.96 * std * input$m2), fill = "green") +
+      geom_line(aes(y = avg )) +
       geom_smooth(aes(y = standardlast, color = "red")) +
       xlab("") +
       ylab("") +

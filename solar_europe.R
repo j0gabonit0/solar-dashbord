@@ -62,7 +62,7 @@ solar_europe_de_nuts <- inner_join(solar_europe_de_w, wiki_nuts, by = c("country
 
 
 path_slpc <- "/Users/sascha/Nextcloud/17_solar_dashbord/slpc.csv"
-slpc <- read_delim(file = path_slpc, delim = ";", skip = 1) %>%
+slpc <- read_delim(file = path_slpc, delim = ";") %>%
   mutate(date = Datum %>% as.Date("%d.%m.%Y") %>% as.character() %>% substr(6,10) %>% paste0("2019-", .) %>% as.Date()) %>%
   group_by(date) %>%
   mutate(watt = gsub(",", ".", `Wirkleistung [kW]`) %>% as.numeric()) %>%
@@ -136,8 +136,33 @@ solar_europe_de_nuts %>%
     geom_ribbon(aes(ymin = avg - 1.96 * std, ymax = avg + 1.96 * std), fill = "grey70") +
     geom_line()
 
-#####
-
+#########################
+#if schleife Eigenverbrauch
+  #Selbstverbrauch = 1. Produktion < Verbrauch = Produktion
+  #Selbstverbrauch = 2. Produktion > Verbrauch = Verbrauch
+  
+  path_slpc_r <- "/Users/sascha/Nextcloud/17_solar_dashbord/slpc.csv"
+  path_sedn_r <- "/Users/sascha/Nextcloud/17_solar_dashbord/solar_europe_de_nuts.csv"
+  
+  slpc_r <- read_delim(file = path_slpc_r, delim = ";")
+  sedn_r <- read_delim(file = path_sedn_r, delim = ",")
+  
+  slpc_r_2 <- unite(slpc_r, c("Datum","Zeit"), col = date,  , sep = " ")
+  inner_join(slpc_r,sedn_r, by = c() )
+  
+  
+  sv <- 
+    
+    
+  
+  punkte <- 85
+  if (punkte >= 90) {
+    print("Sehr gut")
+  } else if (punkte >= 80 & punkte < 90) {
+    print("Gut");    
+  } else {
+    print("Nicht genÃ¼gend");    
+  }
 
 
 

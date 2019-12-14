@@ -7,7 +7,7 @@ library(tidyverse)
 library(ggplot2)
 library(scales)
 library(dplR)
-
+library(lubridate)
 
 #############
 #Shinydashbord neu installieren
@@ -61,18 +61,19 @@ solar_europe_de_nuts <- inner_join(solar_europe_de_w, wiki_nuts, by = c("country
 # Addieren Sie die 4 Werte einer Stunde, und teilen Sie das Ergebnis durch 4. Damit erhalten Sie den Wert eines Kilowatt pro Stunde = kWh. 
 
 
-path_slpc <- "/Users/sascha/Nextcloud/17_solar_dashbord/slpc.csv"
-slpc <- read_delim(file = path_slpc, delim = ";") %>%
-  mutate(date = Datum %>% as.Date("%d.%m.%Y") %>% as.character() %>% substr(6,10) %>% paste0("2019-", .) %>% as.Date()) %>%
+path_slpc_d <- "/Users/sascha/Nextcloud/17_solar_dashbord/slpc.csv"
+slpc_d <- read_delim(file = path_slpc_d, delim = ";") %>%
+  #mutate(date = Datum %>% as.Date("%Y.%m.%d") %>% as.character() %>% substr(6,10) %>% paste0("2019-", .) %>% as.Date()) %>%
+  mutate(date = Datum) %>%
   group_by(date) %>%
-  mutate(watt = gsub(",", ".", `Wirkleistung [kW]`) %>% as.numeric()) %>%
+  mutate(watt = gsub(",", ".",kw) %>% as.numeric()) %>%
   summarize(standardlast = sum(watt) / 4 )
 
 
 
 #####################################
 #3.3 Datei abspeichern für Shiny
-write_csv(slpc,"/Users/sascha/Nextcloud/17_solar_dashbord/slpc_c.csv")
+write_csv(slpc_d,"/Users/sascha/Nextcloud/17_solar_dashbord/slpc_d.csv")
 write_csv(solar_europe_de_nuts,"/Users/sascha/Nextcloud/17_solar_dashbord/solar_europe_de_nuts.csv")
 ################################################
 #4.Schritt - Durchschnittliche Sonneneinstrahlung vor Ort m2
@@ -142,28 +143,15 @@ solar_europe_de_nuts %>%
   #Selbstverbrauch = 2. Produktion > Verbrauch = Verbrauch
   
   path_slpc_r <- "/Users/sascha/Nextcloud/17_solar_dashbord/slpc.csv"
+  slpc_r <- read_delim(file = path_slpc_r, delim = ";")
+  slpc_r$Datum <- as.Date(slpc_r$Datum,"%Y-%m-%d")
+  
+  sedn_r <- read_delim(file = path_sedn_r, delim = ",")
   path_sedn_r <- "/Users/sascha/Nextcloud/17_solar_dashbord/solar_europe_de_nuts.csv"
   
-  slpc_r <- read_delim(file = path_slpc_r, delim = ";")
-  sedn_r <- read_delim(file = path_sedn_r, delim = ",")
-  
-  slpc_r_2 <- unite(slpc_r, c("Datum","Zeit"), col = date,  , sep = " ")
-  inner_join(slpc_r,sedn_r, by = c() )
-  
-  
-  sv <- 
+  slpc_r_2 <- slpc_r %>% #Das Standardlastprofil von 15 Minuten auf eine Stunde umrechnen
+    mutate(t = as.POSIXct(paste(Datum, Zeit), format="%Y-%m-%d %H:%M:%S")) %>%
+    group_by(datetime = floor_date(t, unit = "hour")) %>%
+    summarize( kwh = sum(kw) / 4)
+  write_csv(slpc_r_2,"/Users/sascha/Nextcloud/17_solar_dashbord/slpc_h.csv")
     
-    
-  
-  punkte <- 85
-  if (punkte >= 90) {
-    print("Sehr gut")
-  } else if (punkte >= 80 & punkte < 90) {
-    print("Gut");    
-  } else {
-    print("Nicht genÃ¼gend");    
-  }
-
-
-
-  

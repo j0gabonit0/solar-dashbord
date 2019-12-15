@@ -142,6 +142,8 @@ solar_europe_de_nuts %>%
   #Selbstverbrauch = 1. Produktion < Verbrauch = Produktion
   #Selbstverbrauch = 2. Produktion > Verbrauch = Verbrauch
   
+  #1. Das Standardlastprfil des Konsumenten auf eine Stunde in kwh umrechnen
+  
   path_slpc_r <- "/Users/sascha/Nextcloud/17_solar_dashbord/slpc.csv"
   slpc_r <- read_delim(file = path_slpc_r, delim = ";")
   slpc_r$Datum <- as.Date(slpc_r$Datum,"%Y-%m-%d")
@@ -154,4 +156,20 @@ solar_europe_de_nuts %>%
     group_by(datetime = floor_date(t, unit = "hour")) %>%
     summarize( kwh = sum(kw) / 4)
   write_csv(slpc_r_2,"/Users/sascha/Nextcloud/17_solar_dashbord/slpc_h.csv")
+  
+  #2. Join von Standardlastprofil des Konsumenten und der Jahresstrahlung. Wir haben zwei Datensätze. Einmal das Profil eines durchschnittlichen Konsumenten und unsere Satellitendaten von 190-2016. Das Profil ist nur von 2011. 
+  # die Datensätze müssen gejoint werden, dabei muss das datum entfernt werden und nur auf stundenbasis gejoint.
+  
+  
+  slpc_h <- read_delim("/Users/sascha/Nextcloud/17_solar_dashbord/slpc_h.csv", delim = ",")
+  solar_europe_de_nuts <- read_delim("/Users/sascha/Nextcloud/17_solar_dashbord/solar_europe_de_nuts.csv", delim = ",")
+  
+  sedn_t <- solar_europe_de_nuts %>%
+    filter(utc_timestamp >= "2015-12-31 24:00:00") %>%
+    distinct(utc_timestamp, .keep_all = TRUE) 
+  
+  jsedn_slpc <- 
+    mutate(sedn_t, day = utc_timestamp %>% as.character() %>% substr(5,18))
+    mutate(slpc_h, day = datetime %>% as.character() %>% substr(5,18))
+    inner_join(sedn_r,slpc_h, by = day)
     

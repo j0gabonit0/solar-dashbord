@@ -164,12 +164,21 @@ solar_europe_de_nuts %>%
   slpc_h <- read_delim("/Users/sascha/Nextcloud/17_solar_dashbord/slpc_h.csv", delim = ",")
   solar_europe_de_nuts <- read_delim("/Users/sascha/Nextcloud/17_solar_dashbord/solar_europe_de_nuts.csv", delim = ",")
   
+  #1 Solarstarhlungsdaten um spalte day erweitert
   sedn_t <- solar_europe_de_nuts %>%
-    filter(utc_timestamp >= "2015-12-31 24:00:00") %>%
-    distinct(utc_timestamp, .keep_all = TRUE) 
+    mutate(day = utc_timestamp %>% as.character() %>% substr(5,18))
   
-  jsedn_slpc <- 
-    mutate(sedn_t, day = utc_timestamp %>% as.character() %>% substr(5,18))
-    mutate(slpc_h, day = datetime %>% as.character() %>% substr(5,18))
-    inner_join(sedn_r,slpc_h, by = day)
+  #2 Standardlastprofil pro Stunde um day erweitert
+  jsedn_slpc <- slpc_h %>%
+    mutate(day = datetime %>% as.character() %>% substr(5,18))
+  
+  #3Standardlastprofil an Solarstrahlungsdaten gejoint
+  sedn_slpc <- inner_join(sedn_t, jsedn_slpc, by = "day") %>%
+    select(-datetime, -day)
+  
+  #4 Neue Datentabelle in csv geschrieben
+  write_csv(sedn_slpc,"/Users/sascha/Nextcloud/17_solar_dashbord/sedn_slpc.csv")
+
+    
+    
     

@@ -2,11 +2,11 @@ library(shinydashboard)
 titlePanel("Solar Deutschland")
 
 sidebar <- dashboardSidebar(
-  selectInput(inputId = "selected_country", label = "1.Select city", choices = sort(unique(solar_europe_de_nuts$Stadt))),
-  dateRangeInput(inputId = "date", label = "2.Select years", format = "yyyy", startview = "decade", start = "1990-01-01", end = "2010-01-01"),
-  numericInput(inputId = "kwhy", label = "3.kWh Jahresverbrauch", value = "0"),
-  numericInput(inputId = "m2", label = "Freie Dachfläche", value = "0"),
-  numericInput(inputId = "efficency", label = "Effizienz Module", value = "0.2", min = 0, max = 1, step = 0.05)
+  selectInput(inputId = "selected_country", label = "1.Select city", choices = sort(unique(sedn_slpc$Stadt))),
+  dateRangeInput(inputId = "date", label = "2.Select years", format = "yyyy", startview = "decade", start = "1990-01-01", end = "1990-01-01"),
+  numericInput(inputId = "kwhy", label = "3.kWh Jahresverbrauch", value = "4000"),
+  numericInput(inputId = "m2", label = "4.Freie Dachfläche", value = "1"),
+  numericInput(inputId = "efficency", label = "5.Effizienz Module", value = "0.2", min = 0, max = 1, step = 0.05)
 )
 
 
@@ -20,10 +20,12 @@ body <- dashboardBody(
       valueBoxOutput("m", width = 6)
       ),
   fluidRow(
-    valueBoxOutput("ms", width = 6)
-  )
-)
-
+      valueBoxOutput("ms", width = 6)
+    ),
+  fluidRow(
+      valueBoxOutput("ev", width = 6),
+      valueBoxOutput("es", width = 6)
+))
 # Put them together into a dashboardPage
 dashboardPage(
   dashboardHeader(title = "Solar Germany"),

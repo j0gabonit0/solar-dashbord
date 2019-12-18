@@ -7,19 +7,19 @@ function(input, output) {
     sedn_slpc %>%
       filter(Stadt == input$selected_country) %>%
       filter(utc_timestamp >= paste0(startyear, "-01-01 00:00:00"), utc_timestamp <= paste0(endyear, "-12-31 24:00:00"))
+      
   })  
 
    m2 <- reactive({
      startyear <- as.Date(input$date[1]) %>% as.character() %>% substr(1,4) %>% as.numeric()
      endyear <- as.Date(input$date[2]) %>% as.character() %>% substr(1,4) %>% as.numeric()
      years <- endyear - startyear + 1
-     solar_europe_de_nuts %>%
+     sedn_slpc %>%
        filter(Stadt == input$selected_country) %>%
        filter(utc_timestamp >= paste0(startyear, "-01-01 00:00:00"), utc_timestamp <= paste0(endyear, "-12-31 24:00:00")) %>% 
        summarise(
        yieldm2 = sum(solar_watt) / years * input$efficency,
        m = input$kwhy/yieldm2
-       #c = "50"
        )
   })
    
@@ -37,13 +37,29 @@ function(input, output) {
      startyear <- as.Date(input$date[1]) %>% as.character() %>% substr(1,4) %>% as.numeric()
      endyear <- as.Date(input$date[2]) %>% as.character() %>% substr(1,4) %>% as.numeric()
      years <- endyear - startyear + 1
-     solar_europe_de_nuts %>%
+     sedn_slpc %>%
        filter(Stadt == input$selected_country) %>%
        filter(utc_timestamp >= paste0(startyear, "-01-01 00:00:00"), utc_timestamp <= paste0(endyear, "-12-31 24:00:00")) %>% 
        summarise(
         ms = sum(solar_watt) / years * input$efficency * input$m2
         
        )    
+   })
+   
+   erlös <- reactive({
+     startyear <- as.Date(input$date[1]) %>% as.character() %>% substr(1,4) %>% as.numeric()
+     endyear <- as.Date(input$date[2]) %>% as.character() %>% substr(1,4) %>% as.numeric()
+     years <- endyear - startyear + 1
+     sedn_slpc %>%   
+       mutate(swm2 = solar_watt * input$m2) %>%
+       mutate(kwhd = kwh / 4000 *input$kwhy) %>%
+       mutate(ec = swm2 - kwhd) %>%
+       mutate(e1 = ifelse(swm2 < kwhd, swm2, ifelse(swm2 > kwhd, kwhd , 0))) %>%
+       mutate(v1 = ifelse(swm2 > kwhd, swm2 - kwhd, 0)) %>%
+       summarise(
+         ev = sum(e1),
+         es = sum(v1)
+                )
    })
    
   output$m <- renderInfoBox({
@@ -54,29 +70,41 @@ function(input, output) {
   output$yieldm2 <- renderInfoBox({
       m2 <- m2()
       valueBox(
-          "Erzeugte kWh pro m²", prettyNum(m2$yieldm2))
+          "Erzeugte kWh pro m² p.a", prettyNum(m2$yieldm2))
   })
   
-  output$ms <- renderInfoBox({
-    kwhyield <- kwhyield()
-    valueBox("Produzierte kWh pro m²",prettyNum(kwhyield$ms))
+  output$ev <- renderInfoBox({
+    erlös <- erlös()
+    valueBox("Eigenverbrauch in kWh p.a.",prettyNum(kwhyield$ms))
   })
   
+  output$es <- renderInfoBox({
+    erlös <- erlös()
+    valueBox("Einspeisung in kWh p.a.",prettyNum(kwhyield$ms))
+  })  
+  
+  # avg = durchschnittlice Produktion von kwh pro m2
+  #kwh = 
+  #
   output$radiation_chart <- renderPlot({
     data <- filtering()
     data %>%
-      mutate(day = utc_timestamp %>% as.character() %>% substr(6,10)) %>%
+      mutate(day = utc_timestamp %>% as.character() %>% substr(6,19)) %>%
+      mutate(swm2 = solar_watt * input$m2) %>%
+      mutate(kwhd = kwh / 4000 *input$kwhy) %>%
+      mutate(ec = swm2 - kwhd) %>%
+      mutate(e1 = ifelse(swm2 < kwhd, swm2, ifelse(swm2 > kwhd, kwhd , 0))) %>%
+      mutate(v1 = ifelse(swm2 > kwhd, swm2 - kwhd, 0)) %>%
       group_by(day) %>%
-      summarize(avg = mean(solar_watt, na.rm = TRUE) * input$m2, std = sd(solar_watt, na.rm = TRUE) / sqrt(n()), kwh = mean(kwh) * 24) %>%
-      mutate(date = as.Date(paste0("2019-", day))) %>% 
+      summarize(avg = mean(solar_watt, na.rm = TRUE) * input$m2, e = mean(e1), v = mean(v1), stdv1 = sd(v1, na.rm = TRUE) , std = sd(ec, na.rm = TRUE) / sqrt(n()), slp = mean(kwhd)) %>%
+      mutate(date = as.POSIXct(paste0("2019-", day), format = c("%Y-%m-%d %H:%M:%OS"))) %>%
       ggplot() + 
       aes(x = date) +
-      geom_ribbon(aes(ymin = avg - 1.96 * std * input$m2, ymax = avg + 1.96 * std * input$m2), fill = "green") +
-      geom_line(aes(y = avg )) +
-      geom_smooth(aes(y = kwh, color = "red")) +
+      geom_smooth(aes(y = slp, colour = "Standardlastrofil  p.a")) +
+      geom_smooth(aes(y = e, colour = "Eigenverbrauch")) +
+      geom_smooth(aes(y = v, colour = "Einspeisung ins Netz  p.a")) +
       xlab("") +
-      ylab("") +
-      scale_x_date(labels = date_format("%B"))
+      ylab("")
   })
   
 }

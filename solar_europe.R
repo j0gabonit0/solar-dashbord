@@ -138,9 +138,7 @@ solar_europe_de_nuts %>%
     geom_line()
 
 #########################
-#if schleife Eigenverbrauch
-  #Selbstverbrauch = 1. Produktion < Verbrauch = Produktion
-  #Selbstverbrauch = 2. Produktion > Verbrauch = Verbrauch
+
   
   #1. Das Standardlastprfil des Konsumenten auf eine Stunde in kwh umrechnen
   
@@ -154,7 +152,7 @@ solar_europe_de_nuts %>%
   slpc_r_2 <- slpc_r %>% #Das Standardlastprofil von 15 Minuten auf eine Stunde umrechnen
     mutate(t = as.POSIXct(paste(Datum, Zeit), format="%Y-%m-%d %H:%M:%S")) %>%
     group_by(datetime = floor_date(t, unit = "hour")) %>%
-    summarize( kwh = sum(kw) / 4)
+    summarize( kwh = sum(kw))
   write_csv(slpc_r_2,"/Users/sascha/Nextcloud/17_solar_dashbord/slpc_h.csv")
   
   #2. Join von Standardlastprofil des Konsumenten und der Jahresstrahlung. Wir haben zwei Datensätze. Einmal das Profil eines durchschnittlichen Konsumenten und unsere Satellitendaten von 190-2016. Das Profil ist nur von 2011. 
@@ -173,12 +171,24 @@ solar_europe_de_nuts %>%
     mutate(day = datetime %>% as.character() %>% substr(5,18))
   
   #3Standardlastprofil an Solarstrahlungsdaten gejoint
-  sedn_slpc <- inner_join(sedn_t, jsedn_slpc, by = "day") %>%
+  sedn_slpc <- left_join(sedn_t, jsedn_slpc, by = "day") %>%
     select(-datetime, -day)
   
   #4 Neue Datentabelle in csv geschrieben
   write_csv(sedn_slpc,"/Users/sascha/Nextcloud/17_solar_dashbord/sedn_slpc.csv")
+##########################################################################################################
+  
+  #if schleife Eigenverbrauch
+  #Selbstverbrauch = 1. Produktion < Verbrauch = Produktion e1
+  #Selbstverbrauch = 2. Produktion > Verbrauch = Verbrauch e2
+  #Verkauf 1 = Produktion > Verbrauch v1
+ 
+  
+  t1 <- sedn_slpc %>%
+  mutate(e1 = ifelse(solar_watt < kwh, solar_watt, ifelse(solar_watt > kwh, kwh , 0))) %>%
+  mutate(v1 = ifelse(solar_watt > kwh, solar_watt - kwh, 0)) %>%
+  mutate(day = utc_timestamp %>% as.character() %>% substr(6,19)) 
+  group_by(day) %>%
+  summarize(e = mean(e1), v = mean(v1))
 
-    
-    
-    
+

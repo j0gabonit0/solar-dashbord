@@ -190,5 +190,13 @@ solar_europe_de_nuts %>%
   mutate(day = utc_timestamp %>% as.character() %>% substr(6,19)) 
   group_by(day) %>%
   summarize(e = mean(e1), v = mean(v1))
-
+  
+  
+  erlös <- sedn_slpc %>%
+      mutate(swm2 = solar_watt * 1) %>%
+      mutate(kwhd = kwh / 4000 * 4000) %>%
+      mutate(ec = swm2 - kwhd)%>%
+      mutate(el = ifelse(swm2 < kwhd, swm2, ifelse(swm2 > kwhd, kwhd , 0))) %>%
+      mutate(vk = ifelse(swm2 > kwhd, swm2 - kwhd, 0)) %>%
+      summarise(ev = sum(el, na.rm = TRUE), es = sum(vk, na.rm = TRUE))
 

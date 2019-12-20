@@ -50,37 +50,45 @@ function(input, output) {
      startyear <- as.Date(input$date[1]) %>% as.character() %>% substr(1,4) %>% as.numeric()
      endyear <- as.Date(input$date[2]) %>% as.character() %>% substr(1,4) %>% as.numeric()
      years <- endyear - startyear + 1
-     sedn_slpc %>%   
+     sedn_slpc %>%
+       filter(Stadt == input$selected_country) %>%
+       filter(utc_timestamp >= paste0(startyear, "-01-01 00:00:00"), utc_timestamp <= paste0(endyear, "-12-31 24:00:00")) %>% 
        mutate(swm2 = solar_watt * input$m2) %>%
        mutate(kwhd = kwh / 4000 *input$kwhy) %>%
        mutate(ec = swm2 - kwhd) %>%
        mutate(e1 = ifelse(swm2 < kwhd, swm2, ifelse(swm2 > kwhd, kwhd , 0))) %>%
        mutate(v1 = ifelse(swm2 > kwhd, swm2 - kwhd, 0)) %>%
-       summarise(
-         ev = sum(e1),
-         es = sum(v1)
-                )
+       summarise(ev = sum(e1, na.rm = TRUE) / years * input$cost * input$efficency, es = sum(v1, na.rm = TRUE) / years * input$price * input$efficency, ge = ev + es)
    })
    
   output$m <- renderInfoBox({
     m2 <- m2()
-    valueBox("Benötigte Fläche in m²", prettyNum(m2$m))
+    valueBox("Benötigte Fläche für den angegebenen Verbrauch m²", prettyNum(m2$m))
   })
   
   output$yieldm2 <- renderInfoBox({
       m2 <- m2()
-      valueBox(
-          "Erzeugte kWh pro m² p.a", prettyNum(m2$yieldm2))
+      valueBox("Umgewandelte Sonnenstrahlung in kWh pro m² p.a", prettyNum(m2$yieldm2))
   })
   
+  output$ms <- renderInfoBox({
+    kwhyield <- kwhyield()
+    valueBox("Erzeugte kWh p.a.",prettyNum(kwhyield$ms))
+  })
+      
   output$ev <- renderInfoBox({
     erlös <- erlös()
-    valueBox("Eigenverbrauch in kWh p.a.",prettyNum(kwhyield$ms))
+    valueBox("Einsparung in € p.a.",prettyNum(erlös$ev))
   })
   
   output$es <- renderInfoBox({
     erlös <- erlös()
-    valueBox("Einspeisung in kWh p.a.",prettyNum(kwhyield$ms))
+    valueBox("Vergütung von Westnetz in € p.a.",prettyNum(erlös$es))
+  })  
+  
+  output$ge <- renderInfoBox({
+    erlös <- erlös()
+    valueBox("Erlös in € p.a.",prettyNum(erlös$ge))
   })  
   
   # avg = durchschnittlice Produktion von kwh pro m2

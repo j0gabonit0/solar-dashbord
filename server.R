@@ -61,14 +61,22 @@ function(input, output) {
        summarise(ev = sum(e1, na.rm = TRUE) / years * input$cost * input$efficency, es = sum(v1, na.rm = TRUE) / years * input$price * input$efficency, ge = ev + es)
    })
    
+   invest <- reactive({
+     startyear <- as.Date(input$date[1]) %>% as.character() %>% substr(1,4) %>% as.numeric()
+     endyear <- as.Date(input$date[2]) %>% as.character() %>% substr(1,4) %>% as.numeric()
+     years <- endyear - startyear + 1
+     cy = ((input$kWp * input$invest + (years * input&lk)) / years)
+   })
+   
+   
   output$m <- renderInfoBox({
     m2 <- m2()
-    valueBox("Benötigte Fläche für den angegebenen Verbrauch m²", prettyNum(m2$m))
+    valueBox("Benötigte Fläche in m² ", prettyNum(m2$m))
   })
   
   output$yieldm2 <- renderInfoBox({
       m2 <- m2()
-      valueBox("Umgewandelte Sonnenstrahlung in kWh pro m² p.a", prettyNum(m2$yieldm2))
+      valueBox("Erzeugte kWh/m² p.a", prettyNum(m2$yieldm2))
   })
   
   output$ms <- renderInfoBox({
@@ -84,11 +92,17 @@ function(input, output) {
   output$es <- renderInfoBox({
     erlös <- erlös()
     valueBox("Vergütung von Westnetz in € p.a.",prettyNum(erlös$es))
+    
   })  
   
   output$ge <- renderInfoBox({
     erlös <- erlös()
     valueBox("Erlös in € p.a.",prettyNum(erlös$ge))
+  })  
+  
+  output$cy <- renderInfoBox({
+    invest <- invest()
+    valueBox("Kosten in € p.a.",prettyNum(invest$cy))
   })  
   
   # avg = durchschnittlice Produktion von kwh pro m2

@@ -199,4 +199,5 @@ solar_europe_de_nuts %>%
       mutate(el = ifelse(swm2 < kwhd, swm2, ifelse(swm2 > kwhd, kwhd , 0))) %>%
       mutate(vk = ifelse(swm2 > kwhd, swm2 - kwhd, 0)) %>%
       summarise(ev = sum(el, na.rm = TRUE), es = sum(vk, na.rm = TRUE))
-
+  
+  

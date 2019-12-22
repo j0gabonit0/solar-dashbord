@@ -65,7 +65,8 @@ function(input, output) {
      startyear <- as.Date(input$date[1]) %>% as.character() %>% substr(1,4) %>% as.numeric()
      endyear <- as.Date(input$date[2]) %>% as.character() %>% substr(1,4) %>% as.numeric()
      years <- endyear - startyear + 1
-     cy = ((input$kWp * input$invest + (years * input&lk)) / years)
+     cy = ((input[["kWp"] * input[["invest"]] + (years * input[["lk"]])) / years)
+      #cy = ((input$kWp * input$invest + (years * input$lk)) / years)
    })
    
    
@@ -100,14 +101,11 @@ function(input, output) {
     valueBox("Erlös in € p.a.",prettyNum(erlös$ge))
   })  
   
-  output$cy <- renderInfoBox({
+  output[["cy"]] <- renderInfoBox({
     invest <- invest()
-    valueBox("Kosten in € p.a.",prettyNum(invest$cy))
+    valueBox("Kosten in € p.a.",invest[["cy"]])
   })  
   
-  # avg = durchschnittlice Produktion von kwh pro m2
-  #kwh = 
-  #
   output$radiation_chart <- renderPlot({
     data <- filtering()
     data %>%
@@ -128,5 +126,4 @@ function(input, output) {
       xlab("") +
       ylab("")
   })
-  
 }

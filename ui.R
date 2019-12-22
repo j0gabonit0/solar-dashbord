@@ -9,9 +9,9 @@ sidebar <- dashboardSidebar(
   numericInput(inputId = "efficency", label = "5.Effizienz Module", value = "0.2", min = 0, max = 1, step = 0.05),
   numericInput(inputId = "cost", label = "6.Kosten pro kWh", value = "0.28"),
   numericInput(inputId = "price", label = "7. Einspeisevergütung", value = "0.1"),
-  numericInput(inputId = "kWp", label = "7. Anlagengröße in kWp", value = "10"),
-  numericInput(inputId = "invest", label = "8. Investition/kWp", value = "1300"),
-  numericInput(inputId = "lk", label = "9. Laufende Kosten", value = "1")
+  numericInput(inputId = "kWp", label = "8. Anlagengröße in kWp", value = "10"),
+  numericInput(inputId = "invest", label = "9. Investition/kWp", value = "1300"),
+  numericInput(inputId = "lk", label = "10. Laufende Kosten", value = "1")
   
 )
 # Investition Kosten

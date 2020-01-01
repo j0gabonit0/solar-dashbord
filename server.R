@@ -65,8 +65,8 @@ function(input, output) {
      startyear <- as.Date(input$date[1]) %>% as.character() %>% substr(1,4) %>% as.numeric()
      endyear <- as.Date(input$date[2]) %>% as.character() %>% substr(1,4) %>% as.numeric()
      years <- endyear - startyear + 1
-     cy = ((input[["kWp"] * input[["invest"]] + (years * input[["lk"]])) / years)
-      #cy = ((input$kWp * input$invest + (years * input$lk)) / years)
+     cy = ((input[["kWp"]] * input[["invest"]] + (years * input[["lk"]])) / years)
+    
    })
    
    

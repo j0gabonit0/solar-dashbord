@@ -155,11 +155,12 @@ solar_europe_de_nuts %>%
     summarize( kwh = sum(kw))
   write_csv(slpc_r_2,"/Users/sascha/Nextcloud/17_solar_dashbord/slpc_h.csv")
   
-  #2. Join von Standardlastprofil des Konsumenten und der Jahresstrahlung. Wir haben zwei Datensätze. Einmal das Profil eines durchschnittlichen Konsumenten und unsere Satellitendaten von 190-2016. Das Profil ist nur von 2011. 
+  #2. Join von Standardlastprofil des Konsumenten und von Werk3 und der Jahresstrahlung. Wir haben zwei Datensätze. Einmal das Profil eines durchschnittlichen Konsumenten und unsere Satellitendaten von 190-2016. Das Profil ist nur von 2011. 
   # die Datensätze müssen gejoint werden, dabei muss das datum entfernt werden und nur auf stundenbasis gejoint.
   
   
   slpc_h <- read_delim("/Users/sascha/Nextcloud/17_solar_dashbord/slpc_h.csv", delim = ",")
+  slp_werk3 <- read_delim("/Users/sascha/Nextcloud/17_solar_dashbord/slp_werk3.csv", delim = ";")
   solar_europe_de_nuts <- read_delim("/Users/sascha/Nextcloud/17_solar_dashbord/solar_europe_de_nuts.csv", delim = ",")
   
   #1 Solarstarhlungsdaten um spalte day erweitert
@@ -169,15 +170,19 @@ solar_europe_de_nuts %>%
   #2 Standardlastprofil pro Stunde um day erweitert
   jsedn_slpc <- slpc_h %>%
     mutate(day = datetime %>% as.character() %>% substr(5,18))
+  sedn_slp_werk3 <- slp_werk3 %>%
+    mutate(day = date %>% as.character() %>% substr(5,18))
   
   #3Standardlastprofil an Solarstrahlungsdaten gejoint
-  sedn_slpc <- left_join(sedn_t, jsedn_slpc, by = "day") %>%
+  sedn_slpc1 <- left_join(sedn_t, jsedn_slpc, by = "day") 
+  sedn_slpc <- left_join(sedn_slpc1, sedn_slp_werk3, by = "day") %>%
     select(-datetime, -day)
   
   #4 Neue Datentabelle in csv geschrieben
   write_csv(sedn_slpc,"/Users/sascha/Nextcloud/17_solar_dashbord/sedn_slpc.csv")
 ##########################################################################################################
   
+
   #if schleife Eigenverbrauch
   #Selbstverbrauch = 1. Produktion < Verbrauch = Produktion e1
   #Selbstverbrauch = 2. Produktion > Verbrauch = Verbrauch e2

@@ -65,14 +65,15 @@ function(input, output) {
      startyear <- as.Date(input$date[1]) %>% as.character() %>% substr(1,4) %>% as.numeric()
      endyear <- as.Date(input$date[2]) %>% as.character() %>% substr(1,4) %>% as.numeric()
      years <- endyear - startyear + 1
-     cy = ((input[["kWp"]] * input[["invest"]] + (years * input[["lk"]])) / years)
+     sedn_slpc %>%
+       summarise(cy = ((input[["kWp"]] * input[["invest"]] + (years * input[["lk"]])) / years))
     
    })
    
    
   output$m <- renderInfoBox({
     m2 <- m2()
-    valueBox("Benötigte Fläche in m² ", prettyNum(m2$m))
+    valueBox("Benötigte m² ", prettyNum(m2$m))
   })
   
   output$yieldm2 <- renderInfoBox({
@@ -87,23 +88,23 @@ function(input, output) {
       
   output$ev <- renderInfoBox({
     erlös <- erlös()
-    valueBox("Einsparung in € p.a.",prettyNum(erlös$ev))
+    valueBox("Einsparung € p.a.",prettyNum(erlös$ev))
   })
   
   output$es <- renderInfoBox({
     erlös <- erlös()
-    valueBox("Vergütung von Westnetz in € p.a.",prettyNum(erlös$es))
+    valueBox("Vergütung EEG € p.a.",prettyNum(erlös$es))
     
   })  
   
   output$ge <- renderInfoBox({
     erlös <- erlös()
-    valueBox("Erlös in € p.a.",prettyNum(erlös$ge))
+    valueBox("Erlös € p.a.",prettyNum(erlös$ge))
   })  
   
   output[["cy"]] <- renderInfoBox({
     invest <- invest()
-    valueBox("Kosten in € p.a.",invest[["cy"]])
+    valueBox("Kosten € p.a.",prettyNum(invest[["cy"]]))
   })  
   
   output$radiation_chart <- renderPlot({
@@ -117,7 +118,7 @@ function(input, output) {
       mutate(v1 = ifelse(swm2 > kwhd, swm2 - kwhd, 0)) %>%
       group_by(day) %>%
       summarize(avg = mean(solar_watt, na.rm = TRUE) * input$m2, e = mean(e1), v = mean(v1), stdv1 = sd(v1, na.rm = TRUE) , std = sd(ec, na.rm = TRUE) / sqrt(n()), slp = mean(kwhd)) %>%
-      mutate(date = as.POSIXct(paste0("2019-", day), format = c("%Y-%m-%d %H:%M:%OS"))) %>%
+      mutate(date = as.POSIXct(paste0("2019-", day), format = c("%Y-%m-%d %H:%M:%S"))) %>%
       ggplot() + 
       aes(x = date) +
       geom_smooth(aes(y = slp, colour = "Standardlastrofil  p.a")) +

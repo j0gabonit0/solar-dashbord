@@ -11,7 +11,9 @@ sidebar <- dashboardSidebar(
   numericInput(inputId = "price", label = "7. Einspeisevergütung", value = "0.1"),
   numericInput(inputId = "kWp", label = "8. Anlagengröße in kWp", value = "10"),
   numericInput(inputId = "invest", label = "9. Investition/kWp", value = "1300"),
-  numericInput(inputId = "lk", label = "10. Laufende Kosten", value = "1")
+  numericInput(inputId = "lk", label = "10. Laufende Kosten", value = "1"),
+  numericInput(inputId = "zi", label = "11. Zinsen", value = "1.5"),
+  numericInput(inputId = "ek", label = "12. Anteil Eigenkapital", value = "0.7")
   
 )
 # Investition Kosten
@@ -34,8 +36,8 @@ body <- dashboardBody(
       valueBoxOutput("ge", width = 4)),
   hr(),
   fluidRow(
-    valueBoxOutput("cy", width = 4)
-  )
+    valueBoxOutput("cy", width = 4),
+    valueBoxOutput("zin", width = 4))
   )
  
 

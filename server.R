@@ -41,9 +41,7 @@ function(input, output) {
        filter(Stadt == input$selected_country) %>%
        filter(utc_timestamp >= paste0(startyear, "-01-01 00:00:00"), utc_timestamp <= paste0(endyear, "-12-31 24:00:00")) %>% 
        summarise(
-        ms = sum(solar_watt) / years * input$efficency * input$m2
-        
-       )    
+        ms = sum(solar_watt) / years * input$efficency * input$m2)    
    })
    
    erlös <- reactive({
@@ -67,9 +65,12 @@ function(input, output) {
      years <- endyear - startyear + 1
      sedn_slpc %>%
        summarise(cy = ((input[["kWp"]] * input[["invest"]] + (years * input[["lk"]])) / years))
-    
-   })
+  })
    
+   zinsen <- reactive({
+     zin = (input[["invest"]] * input[["ek"]] * input[["zi"]])
+       
+  })
    
   output$m <- renderInfoBox({
     m2 <- m2()
@@ -104,15 +105,20 @@ function(input, output) {
   
   output[["cy"]] <- renderInfoBox({
     invest <- invest()
-    valueBox("Kosten € p.a.",prettyNum(invest[["cy"]]))
+    valueBox("Laufende Kosten € p.a.",prettyNum(invest[["cy"]]))
   })  
+  
+  output[["zin"]] <- renderInfoBox({
+    zinsen <- zinsen()
+    valueBox("Zinsen € p.a.",prettyNum(zinsen[["zin"]]))
+  }) 
   
   output$radiation_chart <- renderPlot({
     data <- filtering()
     data %>%
       mutate(day = utc_timestamp %>% as.character() %>% substr(6,19)) %>%
-      mutate(swm2 = solar_watt * input$m2) %>%
-      mutate(kwhd = kwh / 4000 *input$kwhy) %>%
+      mutate(swm2 = solar_watt * input$efficency * input$m2) %>%
+      mutate(kwhd = kwh / 4000 *input$kwhy) %>% 
       mutate(ec = swm2 - kwhd) %>%
       mutate(e1 = ifelse(swm2 < kwhd, swm2, ifelse(swm2 > kwhd, kwhd , 0))) %>%
       mutate(v1 = ifelse(swm2 > kwhd, swm2 - kwhd, 0)) %>%

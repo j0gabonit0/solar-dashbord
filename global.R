@@ -4,6 +4,7 @@ library(tidyverse)
 library(ggplot2)
 library(scales)
 library(dplR)
+library(devtools)
 
 path <- "/Users/sascha/Nextcloud/17_solar_dashbord/solar_europe_de_nuts.csv"
 path_slpc <- "/Users/sascha/Nextcloud/17_solar_dashbord/slpc_c.csv"

@@ -9,13 +9,13 @@ sidebar <- dashboardSidebar(
   numericInput(inputId = "efficency", label = "5.Effizienz Module", value = "0.2", min = 0, max = 1, step = 0.05),
   numericInput(inputId = "cost", label = "6.Kosten pro kWh", value = "0.28"),
   numericInput(inputId = "price", label = "7. Einspeisevergütung", value = "0.1"),
-  numericInput(inputId = "kWp", label = "8. Anlagengröße in kWp", value = "10"),
-  numericInput(inputId = "invest", label = "9. Investition/kWp", value = "1300"),
-  numericInput(inputId = "lk", label = "10. Laufende Kosten", value = "1"),
-  numericInput(inputId = "zi", label = "11. Zinsen", value = "1.5"),
-  numericInput(inputId = "ek", label = "12. Anteil Eigenkapital", value = "0.7")
+  numericInput(inputId = "invest", label = "8. Investition/kWp", value = "1300"),
+  numericInput(inputId = "lk", label = "9. Laufende Kosten pro Jahr/kWp", value = "10"),
+  numericInput(inputId = "zi", label = "10. Zinsen", value = "0.015"),
+  numericInput(inputId = "ek", label = "11. Anteil Eigenkapital", value = "0.7")
   
 )
+
 # Investition Kosten
 # Jährliche Kosten
 # kWp
@@ -37,7 +37,8 @@ body <- dashboardBody(
   hr(),
   fluidRow(
     valueBoxOutput("cy", width = 4),
-    valueBoxOutput("zin", width = 4))
+    valueBoxOutput("result", width = 4),
+    valueBoxOutput("gk", width = 4))
   )
  
 

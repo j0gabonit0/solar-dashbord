@@ -63,14 +63,19 @@ function(input, output) {
      startyear <- as.Date(input$date[1]) %>% as.character() %>% substr(1,4) %>% as.numeric()
      endyear <- as.Date(input$date[2]) %>% as.character() %>% substr(1,4) %>% as.numeric()
      years <- endyear - startyear + 1
+     zinsen <- input[["invest"]] * (1 - input[["ek"]]) * input[["zi"]] * input[["m2"]]/5
      sedn_slpc %>%
-       summarise(cy = ((input[["kWp"]] * input[["invest"]] + (years * input[["lk"]])) / years))
-  })
-   
-   zinsen <- reactive({
-     zin = (input[["invest"]] * input[["ek"]] * input[["zi"]])
+       summarise(cy = (input[["m2"]]/5 * input[["invest"]] / 20) + (input[["lk"]] * input[["m2"]] / 5), zins = zinsen, gk = zins + cy)
        
   })
+   
+   #zinsen <- reactive({
+  #  input[["invest"]] * input[["ek"]] * input[["zi"]] * input[["m2"]]/5
+  #     
+ #})
+   
+
+   
    
   output$m <- renderInfoBox({
     m2 <- m2()
@@ -108,10 +113,30 @@ function(input, output) {
     valueBox("Laufende Kosten € p.a.",prettyNum(invest[["cy"]]))
   })  
   
-  output[["zin"]] <- renderInfoBox({
-    zinsen <- zinsen()
-    valueBox("Zinsen € p.a.",prettyNum(zinsen[["zin"]]))
-  }) 
+  output[["result"]] <- renderInfoBox({
+    invest <- invest()
+    valueBox("Laufende Kosten € p.a.",prettyNum(invest[["zins"]]))
+  })
+  
+  output[["gk"]] <- renderInfoBox({
+    invest <- invest()
+    valueBox("Gesamtkosten € p.a.",prettyNum(invest[["gk"]]))
+  })
+
+  
+  
+  
+# Normale Outputbox, falls das normale nicht klappt
+  #output$result <- renderValueBox({
+ #   valueBox(
+    #  "Zinsen",
+    #  invest$zinsen,
+    #  )
+  #})
+
+  
+  
+  
   
   output$radiation_chart <- renderPlot({
     data <- filtering()

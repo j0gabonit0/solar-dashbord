@@ -205,4 +205,9 @@ solar_europe_de_nuts %>%
       mutate(vk = ifelse(swm2 > kwhd, swm2 - kwhd, 0)) %>%
       summarise(ev = sum(el, na.rm = TRUE), es = sum(vk, na.rm = TRUE))
   
-  
+  zin = 5*3*3
+zin  
+
+cy = (((50/5) * (1300/20) + (((20 * 10) * (50/5)) / 20)))
+cy
+
